@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SASAVA wOrLd — Игровой портал</title>
+<style>
+:root{--bg:#0b0d1b;--panel:#151932;--panel2:#20264a;--text:#f5f4ff;--muted:#a7accb;--purple:#9b7bff;--cyan:#5de5e5}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#24204d 0,#0b0d1b 55%);color:var(--text);font-family:system-ui,Segoe UI,sans-serif;min-height:100vh}
+header{padding:26px 18px 18px;text-align:center}header h1{margin:0;font-size:clamp(2rem,7vw,4rem);letter-spacing:3px;color:#c8b6ff;text-shadow:0 0 24px #8e69ff88}header p{color:var(--muted);margin:8px 0}
+main{width:min(1000px,94%);margin:auto;padding-bottom:50px}.hero{background:linear-gradient(120deg,#27204f,#152d4c);border:1px solid #514b85;border-radius:22px;padding:24px;text-align:center;margin:12px 0 25px}.hero h2{margin:0 0 8px}.hero p{color:#c6c7e4;margin:0}
+.games{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px}.card{background:linear-gradient(145deg,var(--panel),#10142b);border:1px solid #343b69;border-radius:18px;padding:19px;cursor:pointer;transition:.2s}.card:hover{transform:translateY(-4px);border-color:var(--purple);box-shadow:0 10px 30px #0005}.emoji{font-size:2.3rem}.card h3{margin:8px 0 4px}.card p{color:var(--muted);font-size:.92rem;min-height:42px}.btn{border:0;border-radius:12px;padding:11px 17px;background:linear-gradient(100deg,#9875ff,#5d8cff);color:white;font-weight:750;cursor:pointer;font-size:1rem}.btn:hover{filter:brightness(1.12)}.btn.secondary{background:#30375f}.gamebox{display:none;background:#151932;border:1px solid #444b7d;border-radius:20px;padding:22px;margin-top:22px;text-align:center}.gamebox.active{display:block}.gamebox h2{margin-top:0}.muted{color:var(--muted)}.big{font-size:2rem;font-weight:800;margin:15px}.tap{width:150px;height:150px;border-radius:50%;font-size:3rem;background:radial-gradient(circle at 35% 30%,#c4aaff,#7548df 70%);border:5px solid #d3c4ff;box-shadow:0 0 35px #966cff66;cursor:pointer;color:white}.tap:active{transform:scale(.94)}.stats{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;margin:14px}.memory{display:grid;grid-template-columns:repeat(4,minmax(55px,80px));gap:9px;justify-content:center;margin:18px auto}.tile{height:76px;border:1px solid #59639b;border-radius:12px;background:#252d56;color:white;font-size:1.7rem;cursor:pointer}.tile.revealed,.tile.done{background:#51418a}.board{display:grid;grid-template-columns:repeat(3, minmax(70px,100px));gap:8px;justify-content:center;margin:18px}.cell{height:88px;border:1px solid #59639b;border-radius:13px;background:#252d56;color:white;font-size:2.5rem;cursor:pointer}.cell:disabled{cursor:default}.status{min-height:28px;color:#c9c3ff;font-weight:650;margin:10px}.row{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin:12px}footer{text-align:center;color:#777fa8;padding:28px 10px;font-size:.85rem}
+
+.topbar{display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px}\n.admin-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:16px 0}\n.admin-note{max-width:620px;margin:10px auto;color:var(--muted);font-size:.9rem}\n.broadcast{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:22px;background:radial-gradient(circle,#24204d,#050611 78%);text-align:center;padding:24px}\n.broadcast.active{display:flex}\n.broadcast-title{font-size:clamp(3rem,16vw,9rem);font-weight:950;line-height:1.05;color:#fff;text-shadow:0 0 28px #9b7bff,0 0 70px #5d8cff;overflow-wrap:anywhere}\n.broadcast-logo{width:min(42vw,230px);height:auto;filter:drop-shadow(0 0 25px #a99aff)}\n.broadcast-caption{font-size:clamp(1.2rem,4vw,2rem);color:#e5ddff;font-weight:800}\n.admin-field{width:min(100%,340px);padding:12px;border-radius:10px;border:1px solid #59639b;background:#252d56;color:white}\n.admin-status{min-height:24px;color:#c9c3ff;margin-top:10px}\n.close-broadcast{position:absolute;top:16px;right:16px;background:#30375f;border:1px solid #777;color:white;border-radius:10px;padding:9px 13px;cursor:pointer}\n@media(max-width:520px){.topbar{flex-direction:column}}
+.visit-counter{display:inline-block;background:#20264a;border:1px solid #514b85;border-radius:12px;padding:10px 14px;color:#d8d0ff;font-weight:700}
+.multiplayer-hero{margin-top:22px}
+#devPanel{border-color:#8b70d8}
+@media(max-width:520px){.topbar{flex-direction:column}}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<header><h1>SASAVA wOrLd</h1><p>Твой игровой мир начинается здесь</p>
+<div class="topbar"><span class="visit-counter" id="visitCounter">Посещений всего: загрузка...</span>
+<button class="btn secondary" onclick="openDevPanel()">🛠 Панель разработчика</button></div></header>
+<main>
+<section class="hero"><h2>🎮 Выбирай игру и начинай!</h2><p>Три мини-игры, которые работают прямо в браузере. Ничего устанавливать не нужно.</p></section>
+<section class="games">
+<div class="card" onclick="openGame('clicker')"><div class="emoji">🟣</div><h3>Pixel Clicker</h3><p>Нажимай на кристалл и собирай пиксели. Сможешь набрать 50?</p><button class="btn">Играть</button></div>
+<div class="card" onclick="openGame('memory')"><div class="emoji">🧠</div><h3>Найди пару</h3><p>Открывай карточки и находи одинаковые символы.</p><button class="btn">Играть</button></div>
+<div class="card" onclick="openGame('ttt')"><div class="emoji">❌</div><h3>Крестики-нолики</h3><p>Сыграй против компьютера.</p><button class="btn">Играть</button></div>
+<div class="card" onclick="openGame('guess')"><div class="emoji">🔢</div><h3>Угадай число</h3><p>Компьютер загадал число от 1 до 100. Сможешь найти его?</p><button class="btn">Играть</button></div>
+<div class="card" onclick="openGame('reaction')"><div class="emoji">⚡</div><h3>Тест реакции</h3><p>Жди зелёный сигнал и нажми как можно быстрее!</p><button class="btn">Играть</button></div>
+<div class="card" onclick="openGame('snake')"><div class="emoji">🐍</div><h3>Змейка</h3><p>Собирай еду, расти и не врезайся в стены или себя.</p><button class="btn">Играть</button></div>
+</section>
+
+<section id="clicker" class="gamebox"><h2>🟣 Pixel Clicker</h2><p class="muted">Кликай по кристаллу! С каждым этапом цель и время увеличиваются.</p><div class="stats"><span>Пиксели: <b id="score">0</b></span><span>Цель: <b id="goal">50</b></span><span>Время: <b id="time">20</b> сек.</span></div><button class="tap" id="tap" onclick="tapCrystal()" aria-label="Нажать на кристалл">✦</button><div class="status" id="clickStatus">Нажми «Старт»!</div><div class="row"><button class="btn" onclick="startClicker()">Старт / заново</button><button class="btn secondary" onclick="closeGames()">Закрыть</button></div></section>
+
+<section id="memory" class="gamebox"><h2>🧠 Найди пару</h2><p class="muted">Найди все 6 пар за как можно меньше ходов.</p><div class="stats"><span>Ходы: <b id="moves">0</b></span><span>Пары: <b id="pairs">0</b>/6</span></div><div class="memory" id="memoryGrid"></div><div class="status" id="memoryStatus">Открывай две карточки!</div><div class="row"><button class="btn" onclick="newMemory()">Новая игра</button><button class="btn secondary" onclick="closeGames()">Закрыть</button></div></section>
+
+<section id="ttt" class="gamebox"><h2>❌ Крестики-нолики</h2><p class="muted">Играй против компьютера.</p><div class="row"><label class="muted">Сложность бота: <select id="botDifficulty" onchange="newTTT()" style="background:#252d56;color:white;border:1px solid #59639b;border-radius:9px;padding:9px"><option value="easy">Лёгкая</option><option value="medium">Средняя</option><option value="hard">Сложная</option></select></label></div><p class="muted" id="tttModeLabel">Режим: против компьютера · Ты — X</p><div class="board" id="board"></div><div class="status" id="tttStatus">Твой ход!</div><div class="row"><button class="btn" onclick="newTTT()">Новая партия</button><button class="btn secondary" onclick="closeGames()">Закрыть</button></div></section>
+
+<section id="guess" class="gamebox"><h2>🔢 Угадай число</h2><p class="muted">Я загадал число от 1 до 100. Попробуй угадать!</p><div class="row"><input id="guessInput" type="number" min="1" max="100" placeholder="Твоё число" style="width:150px;background:#252d56;color:white;border:1px solid #59639b;border-radius:9px;padding:11px"></div><div class="row"><button class="btn" onclick="makeGuess()">Проверить</button><button class="btn secondary" onclick="newGuess()">Заново</button><button class="btn secondary" onclick="closeGames()">Закрыть</button></div><div class="status" id="guessStatus">Введи число и нажми «Проверить».</div><div class="muted">Попыток: <b id="guessTries">0</b></div></section>
+
+<section id="reaction" class="gamebox"><h2>⚡ Тест реакции</h2><p class="muted">Нажми кнопку, чтобы начать. Когда она станет зелёной — нажми как можно быстрее!</p><button class="btn" id="reactionBtn" style="min-width:210px;min-height:90px;background:#424b70" onclick="reactionAction()">Начать</button><div class="status" id="reactionStatus">Готов проверить реакцию?</div><button class="btn secondary" onclick="closeGames()">Закрыть</button></section>
+
+<section id="snake" class="gamebox"><h2>🐍 Змейка</h2><p class="muted">Управляй стрелками на клавиатуре или кнопками ниже.</p><canvas id="snakeCanvas" width="300" height="300" style="max-width:100%;background:#080d1b;border:2px solid #59639b;border-radius:12px"></canvas><div class="status">Счёт: <b id="snakeScore">0</b> · <span id="snakeStatus">Нажми «Старт»</span></div><div class="row"><button class="btn" onclick="startSnake()">Старт / заново</button><button class="btn secondary" onclick="closeGames()">Закрыть</button></div><div class="row"><button class="btn secondary" onclick="snakeDir(0,-1)">↑</button></div><div class="row"><button class="btn secondary" onclick="snakeDir(-1,0)">←</button><button class="btn secondary" onclick="snakeDir(0,1)">↓</button><button class="btn secondary" onclick="snakeDir(1,0)">→</button></div></section>
+
+<section id="devPanel" class="gamebox">
+<h2>🛠 Панель разработчика</h2>
+<p class="muted">Войди в аккаунт администратора, чтобы отправлять команды всем игрокам.</p>
+<div class="row"><input class="admin-field" id="adminEmail" type="email" placeholder="Email администратора" autocomplete="username"></div>
+<div class="row"><input class="admin-field" id="adminPassword" type="password" placeholder="Пароль" autocomplete="current-password"></div>
+<div class="row"><button class="btn" onclick="adminLogin()">Войти</button><button class="btn secondary" onclick="adminLogout()">Выйти</button></div>
+<div class="admin-status" id="adminStatus">Сначала подключи Supabase по инструкции в отдельном файле.</div>
+<div class="admin-actions">
+<button class="btn" onclick="adminBroadcast('dima')">1. На весь экран: Дима</button>
+<button class="btn" onclick="adminBroadcast('logo')">2. Логотип ChatGPT</button>
+<button class="btn" onclick="adminGrantClicks()">3. Всем +111 триллионов кликов</button>
+<button class="btn secondary" onclick="adminBroadcast('')">Убрать надпись у всех</button>
+</div>
+<p class="admin-note">Команды работают у всех игроков, которые открыли сайт, и сохраняются для тех, кто зайдёт позже. Бонус добавляется к счёту каждого игрока на этом устройстве.</p>
+<div class="row"><button class="btn secondary" onclick="closeGames()">Закрыть панель</button></div>
+</section>
+
+</main>
+
+<div id="globalBroadcast" class="broadcast" aria-live="polite">
+<button class="close-broadcast" onclick="dismissBroadcast()">Закрыть</button>
+<div id="broadcastDima" class="broadcast-title" style="display:none">Дима</div>
+<div id="broadcastLogo" style="display:none;align-items:center;justify-content:center;flex-direction:column;gap:18px">
+<svg class="broadcast-logo" viewBox="0 0 100 100" role="img" aria-label="Логотип ChatGPT">
+<path d="M50 8c-9 0-17 5-21 13-9-2-19 2-23 10-5 8-4 18 2 25-3 9 0 19 8 24 8 5 18 5 26 0 8 5 18 5 26 0 8-5 11-15 8-24 6-7 7-17 2-25-4-8-14-12-23-10C67 13 59 8 50 8Z" fill="none" stroke="white" stroke-width="5" stroke-linejoin="round"/>
+<path d="M50 19v62M24 34l52 32M76 34 24 66" fill="none" stroke="white" stroke-width="4" stroke-linecap="round"/>
+</svg>
+<div class="broadcast-caption">ChatGPT</div>
+</div>
+</div>
+
+<footer>SASAVA wOrLd © 2026 · Сделано для весёлой игры</footer>
+<script>
+function openGame(id){document.querySelectorAll('.gamebox').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.getElementById(id).scrollIntoView({behavior:'smooth',block:'center'});if(id==='memory'&&!memoryStarted)newMemory();if(id==='ttt'&&!tttStarted)newTTT();if(id==='guess')newGuess()}
+function closeGames(){document.querySelectorAll('.gamebox').forEach(x=>x.classList.remove('active'))}
+let score=0,seconds=10,clock=null,clickActive=false,clickGoal=50,clickStage=0;
+function stageTime(){return 10+clickStage*5}
+function startClicker(){clearInterval(clock);score=Math.max(score,Number(currentSiteState.bonus_clicks||0));seconds=stageTime();clickActive=true;document.getElementById('score').textContent=score.toLocaleString('ru-RU');document.getElementById('goal').textContent=clickGoal;document.getElementById('time').textContent=seconds;document.getElementById('clickStatus').textContent='Этап '+(clickStage+1)+': набери '+clickGoal+' кликов за '+seconds+' секунд!';clock=setInterval(()=>{seconds--;document.getElementById('time').textContent=seconds;if(seconds<=0){clearInterval(clock);clickActive=false;document.getElementById('clickStatus').textContent='Время вышло! Нужно '+clickGoal+' кликов. Нажми «Старт / заново», чтобы попробовать снова.'}},1000)}
+function tapCrystal(){if(!clickActive)return;score++;document.getElementById('score').textContent=score;if(score>=clickGoal){clearInterval(clock);clickActive=false;let wonGoal=clickGoal;clickGoal*=2;clickStage++;document.getElementById('goal').textContent=clickGoal;document.getElementById('clickStatus').textContent='🏆 Победа! '+wonGoal+' кликов! Следующий этап: '+clickGoal+' кликов за '+stageTime()+' секунд. Нажми «Старт / заново».'}}
+const symbols=['🍒','🚀','⭐','🎮','💎','🐸'];let deck=[],first=null,lock=false,moves=0,pairs=0,memoryStarted=false;
+function newMemory(){memoryStarted=true;deck=[...symbols,...symbols].sort(()=>Math.random()-.5);first=null;lock=false;moves=0;pairs=0;document.getElementById('moves').textContent=0;document.getElementById('pairs').textContent=0;document.getElementById('memoryStatus').textContent='Открывай две карточки!';const grid=document.getElementById('memoryGrid');grid.innerHTML='';deck.forEach((s,i)=>{let b=document.createElement('button');b.className='tile';b.textContent='?';b.onclick=()=>flip(i,b);grid.appendChild(b)})}
+function flip(i,b){if(lock||b.classList.contains('done')||b===first)return;b.textContent=deck[i];b.classList.add('revealed');if(!first){first=b;first.dataset.index=i;return}moves++;document.getElementById('moves').textContent=moves;let prev=Number(first.dataset.index);if(deck[prev]===deck[i]){first.classList.add('done');b.classList.add('done');first.classList.remove('revealed');b.classList.remove('revealed');first=null;pairs++;document.getElementById('pairs').textContent=pairs;if(pairs===6)document.getElementById('memoryStatus').textContent='🏆 Все пары найдены за '+moves+' ходов!'}else{lock=true;let old=first;first=null;setTimeout(()=>{old.textContent='?';b.textContent='?';old.classList.remove('revealed');b.classList.remove('revealed');lock=false},750)}}
+let cells=[],tttStarted=false,tttOver=false,currentPlayer='X';
+function newTTT(){tttStarted=true;cells=Array(9).fill('');tttOver=false;currentPlayer='X';document.getElementById('tttStatus').textContent='Твой ход!';drawBoard()}
+function drawBoard(){const board=document.getElementById('board');board.innerHTML='';cells.forEach((v,i)=>{let b=document.createElement('button');b.className='cell';b.textContent=v;b.disabled=!!v||tttOver;b.onclick=()=>playerMove(i);board.appendChild(b)})}
+const lines=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+function winner(){for(const [a,b,c] of lines)if(cells[a]&&cells[a]===cells[b]&&cells[a]===cells[c])return cells[a];return cells.every(Boolean)?'draw':null}
+function chooseBotMove(){
+ let available=cells.map((v,i)=>v?null:i).filter(v=>v!==null);
+ const difficulty=document.getElementById('botDifficulty').value;
+ if(difficulty==='hard'){
+   // Take a winning move, block an immediate player win, otherwise prefer center/corners.
+   for(const mark of ['O','X']){for(const i of available){cells[i]=''+mark;let w=winner();cells[i]='';if(w===mark)return i}}
+   if(available.includes(4))return 4;
+   let corners=[0,2,6,8].filter(i=>available.includes(i));if(corners.length)return corners[Math.floor(Math.random()*corners.length)];
+ }
+ if(difficulty==='medium'){
+   for(const mark of ['O','X']){for(const i of available){cells[i]=mark;let w=winner();cells[i]='';if(w===mark)return i}}
+   if(available.includes(4))return 4;
+ }
+ return available[Math.floor(Math.random()*available.length)];
+}
+function playerMove(i){
+ if(cells[i]||tttOver)return;
+ cells[i]=currentPlayer;
+ let w=winner();if(w){endTTT(w);return}
+ if(tttMode==='two'){
+   currentPlayer=currentPlayer==='X'?'O':'X';
+   document.getElementById('tttStatus').textContent='Ход игрока '+currentPlayer+'!';
+   drawBoard();return;
+ }
+ let move=chooseBotMove();if(move!==undefined)cells[move]='O';
+ w=winner();if(w){endTTT(w);return}
+ document.getElementById('tttStatus').textContent='Твой ход!';drawBoard()
+}
+function endTTT(w){tttOver=true;let msg;if(w==='draw')msg='Ничья!';else msg=w==='X'?'🎉 Ты победил!':'Компьютер победил. Попробуй ещё!';document.getElementById('tttStatus').textContent=msg;drawBoard()}
+// Угадай число
+let secretNumber=0,guessCount=0,guessFinished=false;
+function newGuess(){secretNumber=Math.floor(Math.random()*100)+1;guessCount=0;guessFinished=false;document.getElementById('guessInput').value='';document.getElementById('guessTries').textContent='0';document.getElementById('guessStatus').textContent='Новое число загадано!'}
+function makeGuess(){if(guessFinished)return;let n=Number(document.getElementById('guessInput').value);if(!Number.isInteger(n)||n<1||n>100){document.getElementById('guessStatus').textContent='Введи целое число от 1 до 100.';return}guessCount++;document.getElementById('guessTries').textContent=guessCount;if(n===secretNumber){guessFinished=true;document.getElementById('guessStatus').textContent='🎉 Верно! Число '+secretNumber+' найдено за '+guessCount+' попыток!'}else document.getElementById('guessStatus').textContent=n<secretNumber?'Больше! Попробуй ещё.':'Меньше! Попробуй ещё.'}
+
+
+function openDevPanel(){closeGames();const el=document.getElementById('devPanel');el.classList.add('active');el.scrollIntoView({behavior:'smooth',block:'center'});}
+
+
+
+
+// ===================== SASAVA wOrLd: Supabase =====================
+// Вставь Project URL и anon/public key из Supabase в эти две строки.
+// Никогда не вставляй сюда service_role key или пароль базы данных.
+const SUPABASE_URL = 'https://qqrzueobfpxxprcivsym.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_Enf6EsO4bLvJk5oQfqeuQg_1EU1RpkW';
+let supabaseClient = null;
+let currentSiteState = { visits: 0, overlay: '', bonus_clicks: 0 };
+let lastAppliedBonus = 0;
+let broadcastChannel = null;
+
+function supabaseReady(){
+  return window.supabase && SUPABASE_URL.startsWith('https://') &&
+    SUPABASE_ANON_KEY.length > 20 &&
+    !SUPABASE_URL.includes('ВСТАВЬ_') && !SUPABASE_ANON_KEY.includes('ВСТАВЬ_');
+}
+function getSupabase(){
+  if(!supabaseReady()) throw new Error('Сначала настрой Supabase по инструкции.');
+  if(!supabaseClient) supabaseClient = window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+  return supabaseClient;
+}
+function setAdminStatus(message){ const el=document.getElementById('adminStatus'); if(el)el.textContent=message; }
+
+async function updateGlobalVisits(){
+  const display=document.getElementById('visitCounter');
+  try{
+    const sb=getSupabase();
+    let sid=sessionStorage.getItem('sasava_visit_session');
+    if(!sid){sid=crypto.randomUUID();sessionStorage.setItem('sasava_visit_session',sid);}
+    const {data,error}=await sb.rpc('register_visit',{p_session_id:sid});
+    if(error)throw error;
+    currentSiteState.visits=Number(data||0);
+    display.textContent='Посещений всего: '+currentSiteState.visits.toLocaleString('ru-RU');
+  }catch(e){display.textContent='Счётчик: настройка требуется';console.warn('SASAVA visits:',e.message);}
+}
+function renderBroadcast(mode){
+  const wrap=document.getElementById('globalBroadcast');
+  document.getElementById('broadcastDima').style.display=mode==='dima'?'block':'none';
+  document.getElementById('broadcastLogo').style.display=mode==='logo'?'flex':'none';
+  wrap.classList.toggle('active',!!mode);
+}
+function dismissBroadcast(){document.getElementById('globalBroadcast').classList.remove('active');}
+function applySiteState(state){
+  if(!state)return;
+  currentSiteState=state;
+  const display=document.getElementById('visitCounter');
+  if(display)display.textContent='Посещений всего: '+Number(state.visits||0).toLocaleString('ru-RU');
+  renderBroadcast(state.overlay||'');
+  const bonus=Number(state.bonus_clicks||0);
+  const added=bonus-lastAppliedBonus;
+  if(added>0){
+    score+=added;
+    const scoreEl=document.getElementById('score');
+    if(scoreEl)scoreEl.textContent=score.toLocaleString('ru-RU');
+    const status=document.getElementById('clickStatus');
+    if(status)status.textContent='🎁 Общий бонус от разработчика получен!';
+  }
+  lastAppliedBonus=bonus;
+}
+async function loadAndSubscribe(){
+  try{
+    const sb=getSupabase();
+    const {data,error}=await sb.from('site_state').select('*').eq('id',1).single();
+    if(error)throw error;
+    applySiteState(data);
+    if(!broadcastChannel){
+      broadcastChannel=sb.channel('sasava-global-state')
+        .on('postgres_changes',{event:'UPDATE',schema:'public',table:'site_state',filter:'id=eq.1'},payload=>applySiteState(payload.new))
+        .subscribe();
+    }
+  }catch(e){console.warn('SASAVA realtime:',e.message);}
+}
+async function adminLogin(){
+  try{
+    const sb=getSupabase();
+    const email=document.getElementById('adminEmail').value.trim();
+    const password=document.getElementById('adminPassword').value;
+    if(!email||!password)throw new Error('Введи email и пароль.');
+    const {error}=await sb.auth.signInWithPassword({email,password});
+    if(error)throw error;
+    setAdminStatus('Вход выполнен. Если ты добавлен в список администраторов, команды доступны.');
+  }catch(e){setAdminStatus('Ошибка входа: '+e.message);}
+}
+async function adminLogout(){
+  try{const sb=getSupabase();const {error}=await sb.auth.signOut();if(error)throw error;setAdminStatus('Ты вышел из аккаунта.');}
+  catch(e){setAdminStatus(e.message);}
+}
+async function adminBroadcast(mode){
+  try{
+    const sb=getSupabase();
+    const {error}=await sb.rpc('admin_set_overlay',{p_overlay:mode});
+    if(error)throw error;
+    setAdminStatus(mode?'Команда отправлена всем игрокам.':'Объявление убрано у всех игроков.');
+  }catch(e){setAdminStatus('Не удалось выполнить команду: '+e.message);}
+}
+async function adminGrantClicks(){
+  try{
+    const sb=getSupabase();
+    const {error}=await sb.rpc('admin_grant_clicks',{p_amount:'111000000000000'});
+    if(error)throw error;
+    setAdminStatus('Готово! Всем игрокам добавлено по 111 триллионов кликов.');
+  }catch(e){setAdminStatus('Не удалось выдать клики: '+e.message);}
+}
+
+// Тест реакции
+let reactionState='idle',reactionTimer=null,reactionStart=0;
+function reactionAction(){const b=document.getElementById('reactionBtn'),s=document.getElementById('reactionStatus');if(reactionState==='idle'||reactionState==='done'){clearTimeout(reactionTimer);reactionState='waiting';b.style.background='#a34b62';b.textContent='Жди зелёный...';s.textContent='Не нажимай раньше времени!';reactionTimer=setTimeout(()=>{reactionState='go';reactionStart=performance.now();b.style.background='#168b5b';b.textContent='НАЖМИ!'},1200+Math.random()*2800)}else if(reactionState==='waiting'){clearTimeout(reactionTimer);reactionState='done';b.style.background='#424b70';b.textContent='Повторить';s.textContent='Слишком рано! Попробуй ещё раз.'}else if(reactionState==='go'){let ms=Math.round(performance.now()-reactionStart);reactionState='done';b.style.background='#424b70';b.textContent='Ещё раз';s.textContent='⚡ Твоя реакция: '+ms+' мс!'}}
+
+// Змейка
+let snake=[],food={x:5,y:5},snakeVector={x:1,y:0},snakeNext={x:1,y:0},snakeLoop=null,snakeAlive=false,snakePoints=0;
+const snakeCanvas=document.getElementById('snakeCanvas'),snakeCtx=snakeCanvas.getContext('2d'),snakeCell=15;
+function drawSnake(){snakeCtx.fillStyle='#080d1b';snakeCtx.fillRect(0,0,300,300);snakeCtx.fillStyle='#ffca67';snakeCtx.fillRect(food.x*snakeCell,food.y*snakeCell,snakeCell-1,snakeCell-1);snake.forEach((part,i)=>{snakeCtx.fillStyle=i?'#53c9a2':'#a98aff';snakeCtx.fillRect(part.x*snakeCell+1,part.y*snakeCell+1,snakeCell-2,snakeCell-2)})}
+function placeFood(){let spot;do{spot={x:Math.floor(Math.random()*20),y:Math.floor(Math.random()*20)}}while(snake.some(s=>s.x===spot.x&&s.y===spot.y));food=spot}
+function startSnake(){clearInterval(snakeLoop);snake=[{x:10,y:10},{x:9,y:10},{x:8,y:10}];snakeVector={x:1,y:0};snakeNext={x:1,y:0};snakePoints=0;snakeAlive=true;document.getElementById('snakeScore').textContent='0';document.getElementById('snakeStatus').textContent='Игра идёт';placeFood();drawSnake();snakeLoop=setInterval(snakeStep,130)}
+function snakeDir(x,y){if(x===-snakeVector.x&&y===-snakeVector.y)return;snakeNext={x,y}}
+function snakeStep(){if(!snakeAlive)return;snakeVector=snakeNext;let head={x:snake[0].x+snakeVector.x,y:snake[0].y+snakeVector.y};if(head.x<0||head.y<0||head.x>=20||head.y>=20||snake.some((s,i)=>i>0&&s.x===head.x&&s.y===head.y)){snakeAlive=false;clearInterval(snakeLoop);document.getElementById('snakeStatus').textContent='Игра окончена! Нажми «Старт / заново».';return}snake.unshift(head);if(head.x===food.x&&head.y===food.y){snakePoints++;document.getElementById('snakeScore').textContent=snakePoints;placeFood()}else snake.pop();drawSnake()}
+document.addEventListener('keydown',e=>{if(!document.getElementById('snake').classList.contains('active'))return;const dirs={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]};if(dirs[e.key]){e.preventDefault();snakeDir(...dirs[e.key])}});
+newMemory();newTTT();newGuess();drawSnake();document.getElementById('goal').textContent=clickGoal;closeGames();updateGlobalVisits();loadAndSubscribe();
+</script>
+</body></html>
